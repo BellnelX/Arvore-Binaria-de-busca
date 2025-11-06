@@ -1,0 +1,176 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
+#include <string.h>
+
+#define N_caracter 20
+#define MAX_VAL 501
+
+//Caso rode sem os simbolos, colocar isso no terminal: chcp 65001
+
+typedef struct NoArv {
+    int chave;
+    struct NoArv *esquerda;
+    struct NoArv *direita;
+} NoArv;
+
+NoArv* NovoNoArv(int chave){
+    NoArv* n = (NoArv*) malloc(sizeof(NoArv));
+    if(!n) return NULL;
+    n->chave = chave;
+    n->esquerda = n->direita = NULL;
+    return n;
+}
+
+NoArv* InserirVersao1(NoArv* raiz, int chave){
+    if(!raiz) return NovoNoArv(chave);
+    if(chave < raiz->chave)
+        raiz->esquerda = InserirVersao1(raiz->esquerda, chave);
+    else if(chave > raiz->chave)
+        raiz->direita = InserirVersao1(raiz->direita, chave);
+    return raiz;
+}
+
+// Em Ordem (In-Order)
+void percurso_em(NoArv* raiz){
+    if(!raiz) return;
+    percurso_em(raiz->esquerda);
+    printf("%d ", raiz->chave);
+    percurso_em(raiz->direita);
+}
+
+// Pré-Ordem (Pre-Order)
+void percurso_pre(NoArv* raiz){
+    if(!raiz) return;
+    printf("%d ", raiz->chave);
+    percurso_pre(raiz->esquerda);
+    percurso_pre(raiz->direita);
+}
+
+// Pós-Ordem (Post-Order)
+void percurso_pos(NoArv* raiz){
+    if(!raiz) return;
+    percurso_pos(raiz->esquerda);
+    percurso_pos(raiz->direita);
+    printf("%d ", raiz->chave);
+}
+
+int altura(NoArv* raiz){
+    if(!raiz) return 0;
+    int he = altura(raiz->esquerda);
+    int hd = altura(raiz->direita);
+    return (he > hd ? he : hd) + 1;
+}
+
+void libera_arvore(NoArv* raiz){
+    if(!raiz) return;
+    libera_arvore(raiz->esquerda);
+    libera_arvore(raiz->direita);
+    free(raiz);
+}
+
+typedef struct {
+    unsigned long comparacoes;
+    unsigned long trocas;
+} Contador;
+
+void imprime_vetor(const int *v, size_t n){
+    for(size_t i = 0; i < n; i++){
+        printf("%d", v[i]);
+        if(i + 1 < n) printf(", ");
+    }
+    printf("\n");
+}
+
+void selection_sort(int *v, size_t n, Contador *ctr){
+    ctr->comparacoes = 0;
+    ctr->trocas = 0;
+
+    for(size_t i = 0; i < n - 1; i++){
+        size_t menor = i;
+        for(size_t j = i + 1; j < n; j++){
+            ctr->comparacoes++;
+            if(v[j] < v[menor]){
+                menor = j;
+            }
+        }
+        if(menor != i){
+            int aux = v[i];
+            v[i] = v[menor];
+            v[menor] = aux;
+            ctr->trocas++;
+        }
+    }
+}
+
+int existe(const int *v, size_t size, int val){
+    for(size_t i = 0; i < size; i++){
+        if(v[i] == val) return 1;
+    }
+    return 0;
+}
+
+void gera_vetor_unico(int *v, size_t n){
+    size_t cont = 0;
+    while(cont < n){
+        int x = (rand() % MAX_VAL) + 1;
+        if(!existe(v, cont, x))
+            v[cont++] = x;
+    }
+}
+
+void imprime_integrantes(void){
+    printf("Integrantes do grupo:\n");
+    printf("Bárbara Marjorye da Silva Nascimento - 2024 0515 8211\n");
+    printf("Fábio dos Santos Reimberg Júnior - 2022 0908 2673\n");
+    printf("Luiz André da Silva Filho - 2025 0234 1474\n");
+    printf("Luiz Henrique Tomaz Ribeiro Gomes - 2025 0257 7168\n\n");
+}
+
+int main(void){
+    srand((unsigned int) time(NULL));
+
+    imprime_integrantes();
+
+    int original[N_caracter];
+    gera_vetor_unico(original, N_caracter);
+
+    printf("Vetor original:\n");
+    imprime_vetor(original, N_caracter);
+    printf("\n");
+
+    int copia[N_caracter];
+    memcpy(copia, original, sizeof(original));
+
+    Contador ctr;
+    int vordenado[N_caracter];
+    memcpy(vordenado, original, sizeof(original));
+    selection_sort(vordenado, N_caracter, &ctr);
+
+    printf("Vetor ordenado (Selection Sort):\n");
+    imprime_vetor(vordenado, N_caracter);
+    printf("Total de comparações: %lu\n", ctr.comparacoes);
+    printf("Total de trocas: %lu\n\n", ctr.trocas);
+
+    NoArv *raiz = NULL;
+    for(size_t i = 0; i < N_caracter; i++){
+        raiz = InserirVersao1(raiz, copia[i]);
+    }
+
+    printf("Percurso EM ORDEM:\n");
+    percurso_em(raiz);
+    printf("\n");
+
+    printf("Percurso PRÉ ORDEM:\n");
+    percurso_pre(raiz);
+    printf("\n");
+
+    printf("Percurso PÓS ORDEM:\n");
+    percurso_pos(raiz);
+    printf("\n\n");
+
+    printf("Altura da árvore: %d\n", altura(raiz));
+
+    libera_arvore(raiz);
+    return 0;
+}
